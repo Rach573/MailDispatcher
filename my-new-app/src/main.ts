@@ -1,5 +1,4 @@
-import './main/main';import { app, BrowserWindow } from 'electron';
-
+import { app, BrowserWindow } from 'electron';
 import path from 'node:path';
 import started from 'electron-squirrel-startup';
 import { registerIpcHandlers } from './main/services/TicketIpcHandlers';
@@ -7,6 +6,10 @@ import { registerIpcHandlers } from './main/services/TicketIpcHandlers';
 // Variables éventuellement injectées par l'environnement de build (Vite/Electron Forge)
 declare const MAIN_WINDOW_VITE_DEV_SERVER_URL: string | undefined;
 declare const MAIN_WINDOW_VITE_NAME: string | undefined;
+
+// Désactiver les fonctionnalités d'autofill pour éviter les erreurs DevTools
+app.commandLine.appendSwitch("disable-features", "AutofillServerCommunication,AutofillEnableAccountSuggestions");
+app.commandLine.appendSwitch("disable-blink-features", "Autofill");
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (started) {
