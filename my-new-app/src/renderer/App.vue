@@ -20,11 +20,11 @@ import type { Tache } from '../shared/types/DatabaseModels';
 export default defineComponent({
   name: 'DispatchApp',
   setup() {
-    const tickets = ref<Tache[]>([]);
+  const tickets = ref<Tache[]>([]);
 
     async function load() {
       try {
-        tickets.value = await window.api.getAllTickets();
+  tickets.value = await window.api.getAllTasks();
       } catch (e) {
         console.error('Erreur chargement tickets:', e);
         tickets.value = [];

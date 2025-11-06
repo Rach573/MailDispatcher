@@ -22,7 +22,8 @@ const createWindow = () => {
     width: 800,
     height: 600,
     webPreferences: {
-      preload: path.join(__dirname, '../preload/preload.js'),
+      // Après suppression des wrappers, le preload bundlé sera émis comme preload.js dans le même dossier build (selon config Vite Forge) – ajuster si besoin après test.
+      preload: path.join(__dirname, 'preload.js'),
     },
   });
 

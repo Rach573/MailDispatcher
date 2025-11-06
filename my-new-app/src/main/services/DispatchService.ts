@@ -3,7 +3,7 @@ import { pool } from "./Database";
 import type { Staff, Mail, Tache, MailPriorite, StaffHierarchie } from "../../shared/types/DatabaseModels";
 
 /**
- * Logique métier principale : Appliquer les règles de priorité.
+ * Logique métier : Traduit le statut hiérarchique en priorité de ticket.
  */
 function getPriorityFromStatus(status: StaffHierarchie): MailPriorite {
   switch (status) {
@@ -18,44 +18,49 @@ function getPriorityFromStatus(status: StaffHierarchie): MailPriorite {
 }
 
 /**
- * Retrouve l'expéditeur et détermine la priorité.
+ * Analyse un mail entrant pour trouver son expéditeur (staff)
+ * et déterminer la priorité calculée.
  */
 async function applyPriorityRules(mail: Mail): Promise<MailPriorite> {
-  // 1. Trouver l'expéditeur (staff)
-  const [rows] = await pool.query(
-    "SELECT statut_hierarchique FROM staff WHERE id = ?",
-    [mail.expediteur_staff_id]
-  );
-  const staffList = rows as Staff[];
-  
-  if (staffList.length === 0) {
-    return 'Normale'; // Expéditeur inconnu
+  try {
+    const [rows] = await pool.query(
+      "SELECT statut_hierarchique FROM staff WHERE id = ?",
+      [mail.expediteur_staff_id]
+    );
+    const staffList = rows as Pick<Staff, 'statut_hierarchique'>[];
+    if (staffList.length === 0) {
+      console.warn(`Expéditeur (Staff ID: ${mail.expediteur_staff_id}) non trouvé. Priorité par défaut.`);
+      return 'Normale';
+    }
+    return getPriorityFromStatus(staffList[0].statut_hierarchique);
+  } catch (error) {
+    console.error("Erreur lors de l'application des règles de priorité:", error);
+    return 'Normale';
   }
-  
-  // 2. Appliquer la règle de priorité
-  return getPriorityFromStatus(staffList[0].statut_hierarchique);
 }
 
 /**
  * Crée le ticket (tache) final après application des règles.
  */
 export async function createTicket(mail: Mail, agentUserId: number): Promise<any> {
-  
   const priorite = await applyPriorityRules(mail);
-
   const [result] = await pool.query(
     `INSERT INTO taches (mail_id, agent_user_id, statut_tache, priorite_calculee, date_attribution) 
      VALUES (?, ?, 'Assigné', ?, NOW())`,
     [mail.id, agentUserId, priorite]
   );
-  
   return result;
 }
 
 /**
- * Récupère tous les tickets (taches) pour affichage.
+ * Récupère tous les tickets (taches) pour affichage avec objet du mail.
  */
-export async function getAllTickets(): Promise<Tache[]> {
-  const [rows] = await pool.query("SELECT * FROM taches ORDER BY date_attribution DESC");
-  return rows as Tache[];
+export async function getAllTickets(): Promise<(Tache & { objet: string })[]> {
+  const [rows] = await pool.query(`
+    SELECT t.*, m.objet 
+    FROM taches t
+    JOIN mail m ON t.mail_id = m.id
+    ORDER BY t.date_attribution DESC
+  `);
+  return rows as (Tache & { objet: string })[];
 }

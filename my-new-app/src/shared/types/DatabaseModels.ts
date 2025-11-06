@@ -1,10 +1,11 @@
 // src/shared/types/DatabaseModels.ts
 
-// --- GESTION DE LA PRIORITÉ (EXPÉDITEURS) ---
+// --- Types de base ---
 
 export type StaffHierarchie = 'Leader' | 'N+1' | 'Employé Lambda';
 export type MailPriorite = 'Alerte Rouge' | 'Urgent' | 'Normale';
 export type MailStatut = 'Nouveau' | 'Assigné' | 'Résolu';
+export type UserRole = 'admin' | 'agent';
 
 /**
  * Table `staff` (Employés de l'entreprise QUI ENVOIENT les mails)
@@ -29,8 +30,8 @@ export interface Staff {
 export interface User {
   id: number;
   username: string;
-  role: 'admin' | 'agent';
-  staff_id_lien?: number; // Lien optionnel si l'agent IT est aussi dans la table staff
+  role: UserRole;
+  staff_id_lien?: number; // Lien optionnel si l'agent IT est aussi un employé de la table staff
 }
 
 /**
@@ -59,3 +60,8 @@ export interface Tache {
   date_attribution: string;
   commentaire?: string;
 }
+
+/*
+  Anciennes interfaces/fonctions liées à Task (Task, TaskState, createTaskObject, formatTask)
+  ont été supprimées dans cette nouvelle architecture.
+*/
