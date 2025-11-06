@@ -11,7 +11,7 @@
 
 <script lang="ts">
 import { defineComponent, onMounted, ref } from 'vue';
-import type { Task } from '../../shared/type';
+import type { Task } from '../shared/types/MessagingModels';
 
 // global window.api declared in src/types/global.d.ts
 

@@ -1,5 +1,5 @@
-import { pool } from "./repositories";
-import { Task } from "../../../shared/type";
+import { pool } from "./Database";
+import { Task } from "../../shared/types/MessagingModels";
 
 export async function getTasks(): Promise<Task[]> {
   const [rows] = await pool.query("SELECT * FROM task");

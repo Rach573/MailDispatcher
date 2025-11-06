@@ -1,6 +1,6 @@
 import { app, BrowserWindow } from "electron";
 import path from "node:path";
-import { registerIpcHandlers } from "./myRepo/repoIPC";
+import { registerIpcHandlers } from "./services/TicketIpcHandlers";
 
 app.commandLine.appendSwitch("disable-features", "AutofillServerCommunication,AutofillEnableAccountSuggestions");
 app.commandLine.appendSwitch("disable-blink-features", "Autofill");

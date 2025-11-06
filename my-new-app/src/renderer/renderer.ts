@@ -1,4 +1,4 @@
-import { Task } from "../../shared/type";
+import { Task } from "../shared/types/MessagingModels";
 
 // global window.api declared in src/types/global.d.ts
 

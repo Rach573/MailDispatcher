@@ -1,4 +1,4 @@
-import type { Task } from '../../shared/type';
+import type { Task } from '../shared/types/MessagingModels';
 
 declare global {
   interface Window {

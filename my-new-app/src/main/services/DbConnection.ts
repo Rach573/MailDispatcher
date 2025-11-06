@@ -5,7 +5,7 @@ export const connection = mysql.createConnection({
   host: 'localhost',
   port: 3306,
   user: 'root',           // ou ton user MariaDB
-  password: '',           // mot de passe s’il y en a un
+  password: '',           // mot de passe s'il y en a un
   database: 'Snowdispatcher',
 });
 

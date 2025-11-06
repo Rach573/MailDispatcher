@@ -1,5 +1,5 @@
 import { contextBridge, ipcRenderer } from 'electron';
-import type { Task } from '../../shared/type';
+import type { Task } from '../shared/types/MessagingModels';
 const mysql = require('mysql2/promise');
 
 contextBridge.exposeInMainWorld('api', {

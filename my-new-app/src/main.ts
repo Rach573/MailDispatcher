@@ -2,7 +2,7 @@ import './main/main';import { app, BrowserWindow } from 'electron';
 
 import path from 'node:path';
 import started from 'electron-squirrel-startup';
-import { registerIpcHandlers } from './main/myRepo/repoIPC';
+import { registerIpcHandlers } from './main/services/TicketIpcHandlers';
 
 // Variables éventuellement injectées par l'environnement de build (Vite/Electron Forge)
 declare const MAIN_WINDOW_VITE_DEV_SERVER_URL: string | undefined;
