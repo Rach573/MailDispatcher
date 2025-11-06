@@ -1,24 +1,11 @@
 import { contextBridge, ipcRenderer } from 'electron';
-import type { Task } from '../shared/types/MessagingModels';
-const mysql = require('mysql2/promise');
+import type { Tache, Mail } from '../shared/types/DatabaseModels';
 
 contextBridge.exposeInMainWorld('api', {
-  getTasks: async (): Promise<Task[]> => {
-    return await ipcRenderer.invoke('tasks:get');
+  getAllTickets: async (): Promise<Tache[]> => {
+    return await ipcRenderer.invoke('tickets:getAll');
   },
-  createTask: async (mailId: number, priorityId: number, categoryId: number): Promise<void> => {
-    await ipcRenderer.invoke('tasks:create', mailId, priorityId, categoryId);
+  createTicket: async (mail: Mail, agentUserId: number): Promise<void> => {
+    await ipcRenderer.invoke('tickets:create', mail, agentUserId);
   }
 });
-
-(async () => {
-  try {
-    const pool = mysql.createPool({ host: 'localhost', user: 'root', password: 'root', database: 'mail_dispatcher', port: 3306 });
-    const [rows] = await pool.query("SHOW TABLES");
-    console.log('Tables:', rows);
-    await pool.end();
-  } catch (err) {
-    console.error('Erreur connexion DB:', err);
-    process.exit(1);
-  }
-})();

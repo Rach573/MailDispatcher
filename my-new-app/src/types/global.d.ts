@@ -1,10 +1,10 @@
-import type { Task } from '../shared/types/MessagingModels';
+import type { Tache, Mail } from '../shared/types/DatabaseModels';
 
 declare global {
   interface Window {
     api: {
-      getTasks: () => Promise<Task[]>;
-      createTask: (mailId: number, priorityId: number, categoryId: number) => Promise<void>;
+      getAllTickets: () => Promise<Tache[]>;
+      createTicket: (mail: Mail, agentUserId: number) => Promise<void>;
     };
   }
 }

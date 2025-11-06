@@ -1,15 +1,17 @@
-import { Task } from "../shared/types/MessagingModels";
+import { Tache } from "../shared/types/DatabaseModels";
 
 // global window.api declared in src/types/global.d.ts
 
-async function loadTasks() {
-  const tasks: Task[] = await window.api.getTasks();
-  console.log("Tâches :", tasks);
+async function loadTickets() {
+  const tickets: Tache[] = await window.api.getAllTickets();
+  console.log("Tickets :", tickets);
 }
 
-async function addTask() {
-  await window.api.createTask(1, 2, 3);
-  console.log("Tâche ajoutée");
-}
+// Exemple de création de ticket (à adapter selon votre UI)
+// async function createTicket() {
+//   const mail = { id: 1, objet: "Test", ... }; // Objet Mail complet
+//   await window.api.createTicket(mail, 1);
+//   console.log("Ticket créé");
+// }
 
-loadTasks();
+loadTickets();
