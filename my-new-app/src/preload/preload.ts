@@ -1,11 +1,7 @@
-import { contextBridge, ipcRenderer } from 'electron';
-import type { Tache, Mail } from '../shared/types/DatabaseModels';
+// src/preload/preload.ts
 
-contextBridge.exposeInMainWorld('api', {
-  getAllTickets: async (): Promise<Tache[]> => {
-    return await ipcRenderer.invoke('tickets:getAll');
-  },
-  createTicket: async (mail: Mail, agentUserId: number): Promise<void> => {
-    await ipcRenderer.invoke('tickets:create', mail, agentUserId);
-  }
-});
+import { contextBridge } from 'electron';
+import { mailServices } from './mailServices';
+
+// Exposer l'API importée dans le monde principal du Renderer
+contextBridge.exposeInMainWorld('api', mailServices);
