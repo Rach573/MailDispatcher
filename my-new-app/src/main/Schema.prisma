@@ -1,1 +1,13 @@
+// my-new-app/src/main/prisma/schema.prisma
 
+generator client {
+  provider = "prisma-client-js"
+  output   = "./generated" // Le client sera généré ici
+}
+
+datasource db {
+  provider = "mysql" // ou "mariadb" si tu préfères
+  url      = env("DATABASE_URL")
+}
+
+// Le reste de ce fichier sera auto-généré à l'étape 4
