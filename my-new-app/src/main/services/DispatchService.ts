@@ -1,5 +1,5 @@
-// src/main/services/DispatchService.ts
-import { pool } from "./Database";
+// my-new-app/src/main/services/DispatchService.ts
+import { prisma } from "./Database"; // <--- Importer 'prisma' au lieu de 'pool'
 import type { Staff, Mail, Tache, MailPriorite, StaffHierarchie } from "../../shared/types/DatabaseModels";
 
 /**
@@ -23,16 +23,19 @@ function getPriorityFromStatus(status: StaffHierarchie): MailPriorite {
  */
 async function applyPriorityRules(mail: Mail): Promise<MailPriorite> {
   try {
-    const [rows] = await pool.query(
-      "SELECT statut_hierarchique FROM staff WHERE id = ?",
-      [mail.expediteur_staff_id]
-    );
-    const staffList = rows as Pick<Staff, 'statut_hierarchique'>[];
-    if (staffList.length === 0) {
+    // Requête avec Prisma (en supposant que le modèle s'appelle 'staff')
+    const staffMember = await prisma.staff.findUnique({
+      where: { id: mail.expediteur_staff_id },
+      select: { statut_hierarchique: true }
+    });
+
+    if (!staffMember) {
       console.warn(`Expéditeur (Staff ID: ${mail.expediteur_staff_id}) non trouvé. Priorité par défaut.`);
       return 'Normale';
     }
-    return getPriorityFromStatus(staffList[0].statut_hierarchique);
+    // @ts-ignore
+    return getPriorityFromStatus(staffMember.statut_hierarchique);
+
   } catch (error) {
     console.error("Erreur lors de l'application des règles de priorité:", error);
     return 'Normale';
@@ -44,11 +47,17 @@ async function applyPriorityRules(mail: Mail): Promise<MailPriorite> {
  */
 export async function createTicket(mail: Mail, agentUserId: number): Promise<any> {
   const priorite = await applyPriorityRules(mail);
-  const [result] = await pool.query(
-    `INSERT INTO taches (mail_id, agent_user_id, statut_tache, priorite_calculee, date_attribution) 
-     VALUES (?, ?, 'Assigné', ?, NOW())`,
-    [mail.id, agentUserId, priorite]
-  );
+
+  // Création avec Prisma (en supposant que le modèle s'appelle 'taches')
+  const result = await prisma.taches.create({
+    data: {
+      mail_id: mail.id,
+      agent_user_id: agentUserId,
+      statut_tache: 'Assigné',
+      priorite_calculee: priorite,
+      date_attribution: new Date() // Prisma gère la conversion
+    }
+  });
   return result;
 }
 
@@ -56,11 +65,25 @@ export async function createTicket(mail: Mail, agentUserId: number): Promise<any
  * Récupère tous les tickets (taches) pour affichage avec objet du mail.
  */
 export async function getAllTickets(): Promise<(Tache & { objet: string })[]> {
-  const [rows] = await pool.query(`
-    SELECT t.*, m.objet 
-    FROM taches t
-    JOIN mail m ON t.mail_id = m.id
-    ORDER BY t.date_attribution DESC
-  `);
-  return rows as (Tache & { objet: string })[];
+
+  // Requête "join" avec Prisma
+  const tachesWithMail = await prisma.taches.findMany({
+    include: {
+      mail: { // 'mail' doit correspondre au nom de la relation dans schema.prisma
+        select: {
+          objet: true
+        }
+      }
+    },
+    orderBy: {
+      date_attribution: 'desc'
+    }
+  });
+
+  // Mapper le résultat pour correspondre à ton ancien type de retour
+  return tachesWithMail.map(t => ({
+    ...t,
+    // @ts-ignore - 'mail' est inclus par la requête
+    objet: t.mail ? t.mail.objet : 'Objet non trouvé',
+  }));
 }
