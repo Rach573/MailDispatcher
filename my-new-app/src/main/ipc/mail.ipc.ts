@@ -1,9 +1,12 @@
-// src/main/services/TicketIpcHandlers.ts
+// src/main/ipc/mail.ipc.ts
 import { ipcMain } from "electron";
-import * as dispatchService from "./DispatchService";
+import * as dispatchService from "../services/DispatchService";
 import type { Mail } from "../../shared/types/DatabaseModels";
 
-export function registerIpcHandlers() {
+/**
+ * Enregistre tous les handlers IPC liés aux mails et tickets
+ */
+export function registerMailIpcHandlers() {
   ipcMain.handle("tickets:getAll", async () => {
     return await dispatchService.getAllTickets();
   });

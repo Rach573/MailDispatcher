@@ -1,7 +1,7 @@
-// src/preload/preload.ts
+// src/preload/index.ts
 
 import { contextBridge } from 'electron';
 import { mailServices } from './mailServices';
 
-// Exposer l'API importée dans le monde principal du Renderer
+// Expose IPC API to renderer process
 contextBridge.exposeInMainWorld('api', mailServices);

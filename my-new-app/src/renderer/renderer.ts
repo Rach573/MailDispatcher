@@ -1,17 +1,9 @@
-import { Tache } from "../shared/types/DatabaseModels";
+// src/renderer/renderer.ts
 
-// global window.api declared in src/types/global.d.ts
+import { createApp } from 'vue';
+import App from './App.vue';
+import '../index.css';
 
-async function loadTickets() {
-  const tickets: Tache[] = await window.api.getAllTasks();
-  console.log("Tickets :", tickets);
-}
-
-// Exemple de création de ticket (à adapter selon votre UI)
-// async function createTicket() {
-//   const mail = { id: 1, objet: "Test", ... }; // Objet Mail complet
-//   await window.api.createTask(mail, 1);
-//   console.log("Ticket créé");
-// }
-
-loadTickets();
+// Mount Vue application
+const app = createApp(App);
+app.mount('#app');

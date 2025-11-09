@@ -1,5 +1,6 @@
 // src/main/services/Database.ts
 import mysql from 'mysql2/promise';
+import { logger } from '../utils/logger';
 
 // Configuration de la connexion MariaDB
 export const pool = mysql.createPool({
@@ -12,4 +13,4 @@ export const pool = mysql.createPool({
   queueLimit: 0
 });
 
-console.log('Database pool created.');
+logger.info('Pool de connexions à la base de données créé');
