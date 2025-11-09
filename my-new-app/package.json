@@ -3,7 +3,7 @@
   "productName": "my-new-app",
   "version": "1.0.0",
   "description": "My Electron application description",
-  "main": ".vite/build/main.js",
+  "main": ".vite/build/index.js",
   "scripts": {
     "start": "electron-forge start",
     "package": "electron-forge package",
@@ -30,6 +30,7 @@
     "@types/electron-squirrel-startup": "^1.0.2",
     "@typescript-eslint/eslint-plugin": "^5.62.0",
     "@typescript-eslint/parser": "^5.62.0",
+    "@vitejs/plugin-vue": "^6.0.1",
     "electron": "38.2.2",
     "eslint": "^8.57.1",
     "eslint-plugin-import": "^2.32.0",
