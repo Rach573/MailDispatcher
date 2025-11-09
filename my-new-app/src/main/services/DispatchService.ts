@@ -1,6 +1,6 @@
 // src/main/services/DispatchService.ts
 import { pool } from "./Database";
-import type { Staff, Mail, Tache, MailPriorite, StaffHierarchie } from "../../shared/types/DatabaseModels";
+import type { Staff, Mail, Tache, MailPriorite, StaffHierarchie, User } from "../../shared/types/DatabaseModels";
 
 /**
  * Logique métier : Traduit le statut hiérarchique en priorité de ticket.
@@ -63,4 +63,36 @@ export async function getAllTickets(): Promise<(Tache & { objet: string })[]> {
     ORDER BY t.date_attribution DESC
   `);
   return rows as (Tache & { objet: string })[];
+}
+
+/**
+ * Récupère tous les agents (users avec role='agent').
+ */
+export async function getAllAgents(): Promise<User[]> {
+  try {
+    const [rows] = await pool.query(
+      "SELECT id, username, role, staff_id_lien FROM users WHERE role = 'agent'"
+    );
+    return rows as User[];
+  } catch (error) {
+    console.error("Erreur lors de la récupération des agents:", error);
+    return [];
+  }
+}
+
+/**
+ * Récupère un agent spécifique par son ID.
+ */
+export async function getAgentById(agentId: number): Promise<User | null> {
+  try {
+    const [rows] = await pool.query(
+      "SELECT id, username, role, staff_id_lien FROM users WHERE id = ? AND role = 'agent'",
+      [agentId]
+    );
+    const agents = rows as User[];
+    return agents.length > 0 ? agents[0] : null;
+  } catch (error) {
+    console.error("Erreur lors de la récupération de l'agent:", error);
+    return null;
+  }
 }

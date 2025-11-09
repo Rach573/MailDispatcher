@@ -12,6 +12,14 @@ export function registerIpcHandlers() {
     return await dispatchService.createTicket(mail, agentUserId);
   });
 
+  ipcMain.handle("agents:getAll", async () => {
+    return await dispatchService.getAllAgents();
+  });
+
+  ipcMain.handle("agents:getById", async (_event, agentId: number) => {
+    return await dispatchService.getAgentById(agentId);
+  });
+
   // Futurs handlers potentiels:
   // ipcMain.handle("tickets:resolve", ...)
   // ipcMain.handle("stats:getGenderCount", ...)
