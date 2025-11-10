@@ -1,12 +1,11 @@
 // src/main/services/DispatchService.ts
-import { pool } from "./Database";
-import type { Staff, Mail, Tache, MailPriorite, StaffHierarchie } from "../../shared/types/DatabaseModels";
+import { prisma } from "../repositories/prisma/client";
+import { MailPriorite, MailStatut, StaffHierarchie } from "../repositories/prisma/generated/client";
 import { DatabaseError } from "../utils/errors";
 import { logger } from "../utils/logger";
 
 interface CreateTicketResult {
-  insertId: number;
-  affectedRows: number;
+  id: number;
 }
 
 /**
@@ -14,13 +13,13 @@ interface CreateTicketResult {
  */
 function getPriorityFromStatus(status: StaffHierarchie): MailPriorite {
   switch (status) {
-    case 'Leader':
-      return 'Alerte Rouge';
-    case 'N+1':
-      return 'Urgent';
-    case 'Employé Lambda':
+    case StaffHierarchie.Leader:
+      return MailPriorite.Alerte_Rouge;
+    case StaffHierarchie.N:
+      return MailPriorite.Urgent;
+    case StaffHierarchie.Employe_Lambda:
     default:
-      return 'Normale';
+      return MailPriorite.Normale;
   }
 }
 
@@ -28,38 +27,50 @@ function getPriorityFromStatus(status: StaffHierarchie): MailPriorite {
  * Analyse un mail entrant pour trouver son expéditeur (staff)
  * et déterminer la priorité calculée.
  */
-async function applyPriorityRules(mail: Mail): Promise<MailPriorite> {
+async function applyPriorityRules(mailId: number): Promise<MailPriorite> {
   try {
-    const [rows] = await pool.query(
-      "SELECT statut_hierarchique FROM staff WHERE id = ?",
-      [mail.expediteur_staff_id]
-    );
-    const staffList = rows as Pick<Staff, 'statut_hierarchique'>[];
-    if (staffList.length === 0) {
-      logger.warn(`Expéditeur (Staff ID: ${mail.expediteur_staff_id}) non trouvé. Priorité par défaut.`);
-      return 'Normale';
+    const mail = await prisma.mail.findUnique({
+      where: { id: mailId },
+      include: {
+        expediteur: {
+          select: {
+            statut_hierarchique: true
+          }
+        }
+      }
+    });
+
+    if (!mail || !mail.expediteur) {
+      logger.warn(`Expéditeur non trouvé pour le mail ID: ${mailId}. Priorité par défaut.`);
+      return MailPriorite.Normale;
     }
-    return getPriorityFromStatus(staffList[0].statut_hierarchique);
+
+    return getPriorityFromStatus(mail.expediteur.statut_hierarchique);
   } catch (error) {
     logger.error("Erreur lors de l'application des règles de priorité:", error);
-    return 'Normale';
+    return MailPriorite.Normale;
   }
 }
 
 /**
  * Crée le ticket (tache) final après application des règles.
  */
-export async function createTicket(mail: Mail, agentUserId: number): Promise<CreateTicketResult> {
+export async function createTicket(mailId: number, agentUserId: number): Promise<CreateTicketResult> {
   try {
-    const priorite = await applyPriorityRules(mail);
-    const [result] = await pool.query(
-      `INSERT INTO taches (mail_id, agent_user_id, statut_tache, priorite_calculee, date_attribution) 
-       VALUES (?, ?, 'Assigné', ?, NOW())`,
-      [mail.id, agentUserId, priorite]
-    );
-    const insertResult = result as CreateTicketResult;
-    logger.info(`Ticket créé avec succès: ID ${insertResult.insertId}`);
-    return insertResult;
+    const priorite = await applyPriorityRules(mailId);
+    
+    const tache = await prisma.taches.create({
+      data: {
+        mail_id: mailId,
+        agent_user_id: agentUserId,
+        statut_tache: MailStatut.Assigne,
+        priorite_calculee: priorite,
+        date_attribution: new Date()
+      }
+    });
+
+    logger.info(`Ticket créé avec succès: ID ${tache.id}`);
+    return { id: tache.id };
   } catch (error) {
     logger.error("Erreur lors de la création du ticket:", error);
     throw new DatabaseError("Impossible de créer le ticket", error);
@@ -69,15 +80,31 @@ export async function createTicket(mail: Mail, agentUserId: number): Promise<Cre
 /**
  * Récupère tous les tickets (taches) pour affichage avec objet du mail.
  */
-export async function getAllTickets(): Promise<(Tache & { objet: string })[]> {
+export async function getAllTickets() {
   try {
-    const [rows] = await pool.query(`
-      SELECT t.*, m.objet 
-      FROM taches t
-      JOIN mail m ON t.mail_id = m.id
-      ORDER BY t.date_attribution DESC
-    `);
-    return rows as (Tache & { objet: string })[];
+    const taches = await prisma.taches.findMany({
+      include: {
+        mail: {
+          select: {
+            objet: true
+          }
+        }
+      },
+      orderBy: {
+        date_attribution: 'desc'
+      }
+    });
+
+    return taches.map(tache => ({
+      id: tache.id,
+      mail_id: tache.mail_id,
+      agent_user_id: tache.agent_user_id,
+      statut_tache: tache.statut_tache,
+      priorite_calculee: tache.priorite_calculee,
+      date_attribution: tache.date_attribution?.toISOString() || null,
+      commentaire: tache.commentaire,
+      objet: tache.mail.objet
+    }));
   } catch (error) {
     logger.error("Erreur lors de la récupération des tickets:", error);
     throw new DatabaseError("Impossible de récupérer les tickets", error);

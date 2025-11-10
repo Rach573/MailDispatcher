@@ -3,6 +3,7 @@ import path from 'node:path';
 import started from 'electron-squirrel-startup';
 import { registerMailIpcHandlers } from './ipc/mail.ipc';
 import { logger } from './utils/logger';
+import { disconnectPrisma } from './repositories/prisma/client';
 
 // Variables éventuellement injectées par l'environnement de build (Vite/Electron Forge)
 declare const MAIN_WINDOW_VITE_DEV_SERVER_URL: string | undefined;
@@ -49,7 +50,8 @@ app.whenReady().then(() => {
   createWindow();
 });
 
-app.on('window-all-closed', () => {
+app.on('window-all-closed', async () => {
+  await disconnectPrisma();
   if (process.platform !== 'darwin') {
     app.quit();
   }
@@ -59,4 +61,11 @@ app.on('activate', () => {
   if (BrowserWindow.getAllWindows().length === 0) {
     createWindow();
   }
+});
+
+// Graceful shutdown
+app.on('before-quit', async (event) => {
+  event.preventDefault();
+  await disconnectPrisma();
+  app.exit();
 });

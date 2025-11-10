@@ -1,11 +1,10 @@
 // src/preload/mailServices.ts
 
 import { ipcRenderer } from 'electron';
-import type { Tache, Mail } from '../shared/types/DatabaseModels';
+import type { Tache } from '../shared/types/DatabaseModels';
 
 interface CreateTicketResult {
-  insertId: number;
-  affectedRows: number;
+  id: number;
 }
 
 // API pont (noms côté renderer orientés "tasks" mais handlers côté main en "tickets")
@@ -13,8 +12,8 @@ export const mailServices = {
   getAllTasks: (): Promise<Tache[]> => {
     return ipcRenderer.invoke('tickets:getAll');
   },
-  createTask: (mail: Mail, agentUserId: number): Promise<CreateTicketResult> => {
-    return ipcRenderer.invoke('tickets:create', mail, agentUserId);
+  createTask: (mailId: number, agentUserId: number): Promise<CreateTicketResult> => {
+    return ipcRenderer.invoke('tickets:create', mailId, agentUserId);
   }
   // Futurs ajouts: resolveTask, updateTicketStatus, stats...
 };
