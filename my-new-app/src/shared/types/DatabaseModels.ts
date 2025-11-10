@@ -6,6 +6,16 @@ export type StaffHierarchie = 'Leader' | 'N+1' | 'Employé Lambda';
 export type MailPriorite = 'Alerte Rouge' | 'Urgent' | 'Normale';
 export type MailStatut = 'Nouveau' | 'Assigné' | 'Résolu';
 export type UserRole = 'admin' | 'agent';
+export type Genre = 'M' | 'F' | 'Autre';
+export type GenderStat = 'F' | 'M' | 'X' | 'U'; // U=Unknown/Null
+
+/**
+ * Table `departements`
+ */
+export interface Departement {
+  id: number;
+  nom_departement: string;
+}
 
 /**
  * Table `staff` (Employés de l'entreprise QUI ENVOIENT les mails)
@@ -15,12 +25,11 @@ export interface Staff {
   id: number;
   nom_complet: string;
   adresse_mail: string;
-  statut_hierarchique: StaffHierarchie; // 'Leader', 'N+1', etc.
-  departement_id: number;
-  // Champs pour statistiques
+  statut_hierarchique: StaffHierarchie;
+  departement_id: number | null;
   est_marie: boolean;
   nombre_enfants: number;
-  genre: 'M' | 'F' | 'Autre';
+  genre: Genre;
 }
 
 /**
@@ -30,8 +39,25 @@ export interface Staff {
 export interface User {
   id: number;
   username: string;
+  password_hash: string;
   role: UserRole;
-  staff_id_lien?: number; // Lien optionnel si l'agent IT est aussi un employé de la table staff
+  staff_id: number | null;
+}
+
+/**
+ * Table `category`
+ */
+export interface Category {
+  id: number;
+  nom_categorie: string;
+}
+
+/**
+ * Table `privacy`
+ */
+export interface Privacy {
+  id: number;
+  niveau_confidentialite: string;
 }
 
 /**
@@ -40,11 +66,12 @@ export interface User {
 export interface Mail {
   id: number;
   objet: string;
-  contenu: string;
+  contenu: string | null;
   date_reception: string;
-  expediteur_staff_id: number; // Lié à staff.id
-  categorie_id: number;
-  privacy_id: number;
+  expediteur_staff_id: number | null;
+  categorie_id: number | null;
+  privacy_id: number | null;
+  handler_user_id: number | null;
 }
 
 /**
@@ -54,14 +81,36 @@ export interface Mail {
 export interface Tache {
   id: number;
   mail_id: number;
-  agent_user_id: number; // L'agent IT assigné
+  agent_user_id: number;
   statut_tache: MailStatut;
-  priorite_calculee: MailPriorite; // 'Alerte Rouge', 'Urgent'...
-  date_attribution: string;
-  commentaire?: string;
+  priorite_calculee: MailPriorite;
+  date_attribution: string | null;
+  commentaire: string | null;
 }
 
-/*
-  Anciennes interfaces/fonctions liées à Task (Task, TaskState, createTaskObject, formatTask)
-  ont été supprimées dans cette nouvelle architecture.
-*/
+/**
+ * Table `stats_gender_mail_count`
+ */
+export interface StatsGenderMailCount {
+  id: number;
+  genre: Genre;
+  mail_count: number;
+}
+
+/**
+ * Table `stat_mail_by_gender`
+ */
+export interface StatMailByGender {
+  stat_date: string; // DATE
+  gender: GenderStat;
+  mail_count: number;
+}
+
+/**
+ * Table `stat_mail_by_priority`
+ */
+export interface StatMailByPriority {
+  stat_date: string; // DATE
+  priority_id: number;
+  mail_count: number;
+}
